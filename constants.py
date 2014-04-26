@@ -1,0 +1,2 @@
+SCREEN_SIZE = 700
+PLAYING = False
