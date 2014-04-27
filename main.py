@@ -67,10 +67,17 @@ class Thing(pygame.sprite.Sprite):
 class Player(Thing):
     def __init__(self):
         Thing.__init__(self, "dude.png", 0,0)
+        self.imageleft, self.rectleft = load_image("dude2.png")
+        self.imageright, self.rectright = self.image, self.rect
         self.hops = 0
     def tick(self):
+        old_dx = self.dx
         self.dy += 2 
         Thing.tick(self)
+        if self.dx > 0:
+            self.image = self.imageright
+        elif self.dx < 0:
+            self.image = self.imageleft
 
     def jump(self):
         if not self.hops > 1:
@@ -120,17 +127,17 @@ class Stage():
 
     def keypress(self, key):
         if key == K_RIGHT:
-            self.player.ddx = 1
+            self.player.ddx = WALKING_SPEED
         elif key == K_LEFT:
-            self.player.ddx = -1
+            self.player.ddx = -WALKING_SPEED
         elif key == K_SPACE:
             self.player.jump()
         
     def keyup(self, key):
-        if key == K_RIGHT and self.player.ddx == 1:
+        if key == K_RIGHT and self.player.ddx == WALKING_SPEED:
             self.player.ddx = 0
             self.player.dx = 0
-        elif key == K_LEFT and self.player.ddx == -1:
+        elif key == K_LEFT and self.player.ddx == -WALKING_SPEED:
             self.player.ddx = 0
             self.player.dx = 0
             
