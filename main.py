@@ -93,11 +93,12 @@ class Stage():
             x += platform.rect.width
             self.sprites.add (platform)
 
-        self.sprites.add(Platform(400, 700))
         self.sprites.add(Platform(400, 300))
 
         self.sprites.add(Platform(200, 600))
-        self.sprites.add(Platform(200, 200))
+        self.sprites.add(Platform(200, 0))
+        self.sprites.add(Platform(200, -200))
+        self.sprites.add(Platform(200, -400))
     def keypress(self, key):
         if key == K_RIGHT:
             self.player.ddx = 1
@@ -127,6 +128,15 @@ class Stage():
                     self.player.dy = 0
                     self.player.airbourne = False
                     self.player.hops = 0
+
+        y = self.player.rect.y
+        if y < 100:
+            for sprite in self.sprites:
+                sprite.rect.y += 100 - y
+        elif y > SCREEN_SIZE - 100:
+            for sprite in self.sprites:
+                sprite.rect.y += (SCREEN_SIZE - 100) - y
+            
 
     def draw(self, win):
         win.fill((0,0,0), (0,0,SCREEN_SIZE,SCREEN_SIZE)) 
