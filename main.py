@@ -170,7 +170,7 @@ class Stage():
         while x < SCREEN_SIZE:
             platform = Platform(x, 0)
             platform.rect.bottom = LEVEL_HEIGHT
-            x += platform.rect.width
+            x += platform.rect.width - 10
             self.sprites.add (platform)
 
         self.sprites.add(Platform(400, LEVEL_HEIGHT - 150))
