@@ -35,6 +35,7 @@ class Thing(pygame.sprite.Sprite):
         self.rect.center = (x, y)
         self.dx = 0
         self.ddx = 0
+        self.dy = 0
     def draw(self,win):
         pass
     def tick(self):
@@ -51,26 +52,43 @@ class Thing(pygame.sprite.Sprite):
             if self.dx > 0:
                 self.dx == 0
 
-        if self.dx < -5:
-            self.dx = -5
-        elif self.dx > 5:
-            self.dx = 5
+        if self.dx < -10:
+            self.dx = -10
+        elif self.dx > 10:
+            self.dx = 10
+
+        self.rect.y += self.dy
+        self.dy += 5 
+        
+        if self.rect.bottom >= SCREEN_SIZE:
+            self.rect.bottom = SCREEN_SIZE;
+            self.dy = 0;
+            
+
+    def jump(self):
+        self.dy = -50
+        
 
     
 
 class Stage():
     def __init__(self):
         self.sprites = SomeSprites()
-        self.player = Thing("dude.png", 400, 400);
-        self.sprites.add(self.player);
+        self.player = Thing("dude.png", 400, 400)
+        self.sprites.add(self.player)
     def keypress(self, key):
         if key == K_RIGHT:
-            self.player.ddx = 1;
-        if key == K_LEFT:
-            self.player.ddx = -1;
+            self.player.ddx = 1
+        elif key == K_LEFT:
+            self.player.ddx = -1
+        elif key == K_SPACE:
+            self.player.jump()
+        
             
     def tick(self, win):
         self.sprites.tick();
+    def draw(self, win):
+        win.fill((0,0,0), (0,0,SCREEN_SIZE,SCREEN_SIZE)) 
         self.sprites.draw(win);
         
 
@@ -96,6 +114,7 @@ def main():
                 stage.keypress(event.key)
         
         stage.tick(win)
+        stage.draw(win)
         
         pygame.display.update()
         fpsClock.tick(60)
