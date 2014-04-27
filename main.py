@@ -17,11 +17,11 @@ def load_image(name):
     image.set_colorkey(colorkey, RLEACCEL)
     return image, image.get_rect()
 
-class SomeSprites(pygame.sprite.Group):
+class SomeSprites(pygame.sprite.LayeredUpdates):
     def __init__(self):
-        pygame.sprite.Group.__init__(self)
+        pygame.sprite.LayeredUpdates.__init__(self)
     def draw(self,win):
-        pygame.sprite.Group.draw(self, win)
+        pygame.sprite.LayeredUpdates.draw(self,win)
         for thing in self:
             thing.draw(win)
     def tick(self):
@@ -36,7 +36,7 @@ class Thing(pygame.sprite.Sprite):
         self.dx = 0
         self.ddx = 0
         self.dy = 0
-        self.hops = 0
+
     def draw(self,win):
         pass
     def tick(self):
@@ -59,22 +59,29 @@ class Thing(pygame.sprite.Sprite):
             self.dx = 10
 
         self.rect.y += self.dy
-        self.dy += 2 
+
         if self.dy > 20:
             self.dy = 20
-        
-        if self.rect.bottom >= SCREEN_SIZE:
-            self.rect.bottom = SCREEN_SIZE;
-            self.dy = 0;
+
+
+class Player(Thing):
+    def __init__(self):
+        Thing.__init__(self, "dude.png", 0,0)
+        self.hops = 0
+    def tick(self):
+        self.dy += 2 
+        Thing.tick(self)
 
     def jump(self):
-        if not self.airbourne and not self.hops > 1:
+        if not self.hops > 1:
             self.dy = -25
             self.hops += 1
+
 
 class Platform(Thing):
     def __init__(self, x, y):
         Thing.__init__(self, "platform.png", x, y)
+        self.solid = True
     def tick(self):
         pass
     def draw(self, win):
@@ -83,22 +90,34 @@ class Platform(Thing):
 class Stage():
     def __init__(self):
         self.sprites = SomeSprites()
-        self.player = Thing("dude.png", 400, 400)
-        self.sprites.add(self.player)
 
-        x = 0;
+        self.player = Player()
+        self.sprites.add(self.player, layer =1)
+
+        x = 0
         while x < SCREEN_SIZE:
             platform = Platform(x, 0)
-            platform.rect.bottom = SCREEN_SIZE
+            platform.rect.bottom = LEVEL_HEIGHT
             x += platform.rect.width
             self.sprites.add (platform)
 
-        self.sprites.add(Platform(400, 300))
+        y = 300
+        while y < LEVEL_HEIGHT:
+            self.sprites.add(Platform(400, y))
+            y += 100
 
-        self.sprites.add(Platform(200, 600))
+
+        self.sprites.add(Thing("sky.png",0,0), layer = 0)
+        self.sprites.add(Platform(400, 700))
+
+        self.sprites.add(Platform(200, 800))
         self.sprites.add(Platform(200, 0))
-        self.sprites.add(Platform(200, -200))
-        self.sprites.add(Platform(200, -400))
+        self.sprites.add(Platform(200, 900))
+        self.sprites.add(Platform(200, 1000))
+        self.goal = Platform(400, -500)
+        self.sprites.add(self.goal)
+
+
     def keypress(self, key):
         if key == K_RIGHT:
             self.player.ddx = 1
@@ -123,7 +142,7 @@ class Stage():
 
         if self.player.dy > 0:
             for platform in self.sprites:
-                if pygame.sprite.collide_rect(feet, platform) and not platform == self.player:
+                if pygame.sprite.collide_rect(feet, platform) and hasattr(platform, "solid") and platform.solid:
                     self.player.rect.bottom = platform.rect.y-1
                     self.player.dy = 0
                     self.player.airbourne = False
@@ -136,6 +155,9 @@ class Stage():
         elif y > SCREEN_SIZE - 100:
             for sprite in self.sprites:
                 sprite.rect.y += (SCREEN_SIZE - 100) - y
+
+        if self.player.rect.y < self.goal.rect.y:
+            print "you win"
             
 
     def draw(self, win):
