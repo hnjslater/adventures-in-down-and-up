@@ -69,6 +69,9 @@ class Thing(pygame.sprite.Sprite):
 
         if self.dy > 20:
             self.dy = 20
+    def offset(self, y):
+        self.rect.y += y
+
 
 
 class Player(Thing):
@@ -151,6 +154,10 @@ class MovingPlatform(Platform):
                 self.dy = -self.speed
             if self.rect.y < self.min_y:
                 self.dy = self.speed
+    def offset(self, y):
+        Platform.offset(self, y)
+        self.max_y += y
+        self.min_y += y
 
 class Stage():
     def __init__(self):
@@ -166,10 +173,16 @@ class Stage():
             x += platform.rect.width
             self.sprites.add (platform)
 
-        y = 300
-        while y < LEVEL_HEIGHT:
-            self.sprites.add(MovingPlatform(200, y, 400, y, 20))
-            y += 100
+        self.sprites.add(Platform(400, LEVEL_HEIGHT - 150))
+        self.sprites.add(Platform(400, LEVEL_HEIGHT - 250))
+        self.sprites.add(Platform(400, LEVEL_HEIGHT - 350))
+        self.sprites.add(Platform(200, LEVEL_HEIGHT - 350))
+        self.sprites.add(Platform(200, LEVEL_HEIGHT - 500))
+        self.sprites.add(Platform(200, LEVEL_HEIGHT - 700))
+        self.sprites.add(Platform(200, LEVEL_HEIGHT - 1000))
+        self.sprites.add(Platform(500, LEVEL_HEIGHT - 1300))
+        self.sprites.add(Platform(500+64, LEVEL_HEIGHT - 1300))
+        self.sprites.add(MovingPlatform(500, LEVEL_HEIGHT - 1400, 500, LEVEL_HEIGHT - 1600, 5))
 
 
         top = load_image("sky.png")
@@ -194,8 +207,7 @@ class Stage():
         ground3rd = top.subsurface(second_line,300,width - second_line,50)
         self.sprites.add(Platform(second_line, 300, img = ground3rd), layer = PLATFORM_LAYER)
 
-        self.sprites.add(Platform(200, 900))
-        self.sprites.add(Platform(200, 1000))
+
         self.goal = Platform(400, -500)
         self.sprites.add(self.goal)
 
@@ -232,10 +244,10 @@ class Stage():
         y = self.player.rect.y
         if y < 100:
             for sprite in self.sprites:
-                sprite.rect.y += 100 - y
+                sprite.offset(100 - y)
         elif y > SCREEN_SIZE - 100:
             for sprite in self.sprites:
-                sprite.rect.y += (SCREEN_SIZE - 100) - y
+                sprite.offset((SCREEN_SIZE - 100) - y)
 
         if self.player.rect.bottom <= self.ground.rect.y and constants.STARTED and not self.won:
             self.sprites.add(Thing("win.png",0,self.sky.rect.y), layer = SKY_LAYER)
