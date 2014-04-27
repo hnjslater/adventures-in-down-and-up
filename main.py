@@ -58,7 +58,9 @@ class Thing(pygame.sprite.Sprite):
             self.dx = 10
 
         self.rect.y += self.dy
-        self.dy += 5 
+        self.dy += 3 
+        if self.dy > 20:
+            self.dy = 20
         
         if self.rect.bottom >= SCREEN_SIZE:
             self.rect.bottom = SCREEN_SIZE;
