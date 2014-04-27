@@ -77,6 +77,7 @@ class Player(Thing):
         self.imageleft = pygame.transform.flip(self.image, True, False)
         self.imageright = self.image
         self.hops = 0
+        self.falling = False
     def tick(self):
         old_dx = self.dx
         self.dy += 2 
@@ -103,16 +104,23 @@ class Platform(Thing):
     def bang(self, player):
         player.rect.bottom = self.rect.y-1
         player.dy = 0
-        player.airbourne = False
         player.hops = 0
+        player.falling = False
 
 class LoosePlatform(Platform):
     def __init__(self, x, y, ** kwargs):
         Platform.__init__(self, x, y, ** kwargs)
     def draw(self, win):
         pass
+    def tick(self):
+        Platform.tick(self);
+        if self.rect.y > 1000:
+            self.kill()
     def bang(self, player):
-        self.ddy = 2
+        self.ddy = 2.5
+        player.dx = 0
+        player.ddx = 0
+        player.falling = True
 
 class Stage():
     def __init__(self):
@@ -151,28 +159,28 @@ class Stage():
         ground3rd = top.subsurface(second_line,300,width - second_line,50)
         self.sprites.add(Platform(second_line, 300, img = ground3rd), layer = 0)
 
-        self.sprites.add(Platform(200, 0))
         self.sprites.add(Platform(200, 900))
         self.sprites.add(Platform(200, 1000))
         self.goal = Platform(400, -500)
         self.sprites.add(self.goal)
 
-
     def keypress(self, key):
-        if key == K_RIGHT:
-            self.player.ddx = WALKING_SPEED
-        elif key == K_LEFT:
-            self.player.ddx = -WALKING_SPEED
-        elif key == K_SPACE:
-            self.player.jump()
+        if not self.player.falling:
+            if key == K_RIGHT:
+                self.player.ddx = WALKING_SPEED
+            elif key == K_LEFT:
+                self.player.ddx = -WALKING_SPEED
+            elif key == K_SPACE:
+                self.player.jump()
         
     def keyup(self, key):
-        if key == K_RIGHT and self.player.ddx == WALKING_SPEED:
-            self.player.ddx = 0
-            self.player.dx = 0
-        elif key == K_LEFT and self.player.ddx == -WALKING_SPEED:
-            self.player.ddx = 0
-            self.player.dx = 0
+        if not self.player.falling:
+            if key == K_RIGHT and self.player.ddx == WALKING_SPEED:
+                self.player.ddx = 0
+                self.player.dx = 0
+            elif key == K_LEFT and self.player.ddx == -WALKING_SPEED:
+                self.player.ddx = 0
+                self.player.dx = 0
             
     def tick(self, win):
         self.sprites.tick();
