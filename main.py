@@ -110,8 +110,6 @@ class Platform(Thing):
 class LoosePlatform(Platform):
     def __init__(self, x, y, ** kwargs):
         Platform.__init__(self, x, y, ** kwargs)
-    def draw(self, win):
-        pass
     def tick(self):
         Platform.tick(self);
         if self.rect.y > 1000:
@@ -123,6 +121,36 @@ class LoosePlatform(Platform):
         player.ddx = 0
         player.falling = True
 
+class MovingPlatform(Platform):
+    def __init__(self, x1, y1, x2, y2, speed, ** kwargs):
+        self.max_x = max(x1,x2)
+        self.max_y = max(y1,y2)
+        self.min_x = min(x1,x2)
+        self.min_y = min(y1,y2)
+        self.speed = speed
+
+        Platform.__init__(self, self.min_x, self.min_y, ** kwargs)
+
+        self.dx = 0
+        self.dy = 0
+        if not x1 == x2:
+            self.dx = self.speed
+        if not y1 == y2:
+            self.dy = self.speed
+
+    def tick(self):
+        Platform.tick(self);
+        if not self.max_x == self.min_x:
+            if self.rect.x > self.max_x:
+                self.dx = -self.speed
+            if self.rect.x < self.min_x:
+                self.dx = self.speed
+
+        if not self.max_y == self.min_y:
+            if self.rect.y > self.max_y:
+                self.dy = -self.speed
+            if self.rect.y < self.min_y:
+                self.dy = self.speed
 
 class Stage():
     def __init__(self):
@@ -140,7 +168,7 @@ class Stage():
 
         y = 300
         while y < LEVEL_HEIGHT:
-            self.sprites.add(Platform(400, y))
+            self.sprites.add(MovingPlatform(200, y, 400, y, 20))
             y += 100
 
 
