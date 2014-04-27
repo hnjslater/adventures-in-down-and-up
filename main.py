@@ -116,11 +116,13 @@ class LoosePlatform(Platform):
         Platform.tick(self);
         if self.rect.y > 1000:
             self.kill()
+            constants.STARTED = True
     def bang(self, player):
         self.ddy = 2.5
         player.dx = 0
         player.ddx = 0
         player.falling = True
+
 
 class Stage():
     def __init__(self):
@@ -143,21 +145,26 @@ class Stage():
 
 
         top = load_image("sky.png")
-        sky = top.subsurface(0,0,top.get_rect().width,300)
-        self.sprites.add(Thing(sky,0,0), layer = 0)
+        self.sky = Thing(top.subsurface(0,0,top.get_rect().width,300),0,0)
+        self.sky_color = top.get_at((0,0))
+        self.sprites.add(self.sky, layer = SKY_LAYER)
         
         first_line = 50
         second_line = 150
         width = top.get_rect().width
 
+        self.won = False
+
+
         ground1st = top.subsurface(0,300,first_line,50)
-        self.sprites.add(Platform(0,300, img = ground1st), layer = 0)
+        self.ground = Platform(0,300, img = ground1st)
+        self.sprites.add(self.ground, layer = PLATFORM_LAYER)
 
         ground2nd = top.subsurface(first_line,300,second_line - first_line,50)
-        self.sprites.add(LoosePlatform(first_line, 300, img = ground2nd), layer = 0)
+        self.sprites.add(LoosePlatform(first_line, 300, img = ground2nd), layer = PLATFORM_LAYER)
 
         ground3rd = top.subsurface(second_line,300,width - second_line,50)
-        self.sprites.add(Platform(second_line, 300, img = ground3rd), layer = 0)
+        self.sprites.add(Platform(second_line, 300, img = ground3rd), layer = PLATFORM_LAYER)
 
         self.sprites.add(Platform(200, 900))
         self.sprites.add(Platform(200, 1000))
@@ -202,12 +209,21 @@ class Stage():
             for sprite in self.sprites:
                 sprite.rect.y += (SCREEN_SIZE - 100) - y
 
-        if self.player.rect.y < self.goal.rect.y:
-            print "you win"
+        if self.player.rect.bottom <= self.ground.rect.y and constants.STARTED and not self.won:
+            self.sprites.add(Thing("win.png",0,self.sky.rect.y), layer = SKY_LAYER)
+            self.won = True
+            self.player.falling = True
+            self.player.dx = 0
+            self.player.ddx = 0
+            
             
 
     def draw(self, win):
         win.fill((0,0,0), (0,0,SCREEN_SIZE,SCREEN_SIZE)) 
+        if self.sky.rect.top > 0:
+            win.fill(self.sky_color, (0,0,SCREEN_SIZE,self.sky.rect.top + 1)) 
+            
+
         self.sprites.draw(win);
         
 
