@@ -15,7 +15,7 @@ def load_image(name):
     image = image.convert_alpha()
     colorkey = image.get_at((0,0))
     image.set_colorkey(colorkey, RLEACCEL)
-    return image, image.get_rect()
+    return image
 
 class SomeSprites(pygame.sprite.LayeredUpdates):
     def __init__(self):
@@ -29,19 +29,26 @@ class SomeSprites(pygame.sprite.LayeredUpdates):
             thing.tick()
 
 class Thing(pygame.sprite.Sprite):
-    def __init__(self, img_path, x, y):
+    def __init__(self, img_path, x, y, **kwargs):
         pygame.sprite.Sprite.__init__(self)
-        self.image, self.rect = load_image(img_path)
-        self.rect.center = (x, y)
+        if isinstance(img_path, basestring):
+            self.image = load_image(img_path)
+        else:
+            self.image = img_path
+        self.rect = self.image.get_rect()
+
+        self.rect.topleft = (x, y)
         self.dx = 0
         self.ddx = 0
         self.dy = 0
+        self.ddy = 0
 
     def draw(self,win):
         pass
     def tick(self):
         self.rect.x += self.dx
         self.dx += self.ddx
+        self.dy += self.ddy
 
         if self.rect.x < 0:
             self.rect.x = 0
@@ -67,8 +74,8 @@ class Thing(pygame.sprite.Sprite):
 class Player(Thing):
     def __init__(self):
         Thing.__init__(self, "dude.png", 0,0)
-        self.imageleft, self.rectleft = load_image("dude2.png")
-        self.imageright, self.rectright = self.image, self.rect
+        self.imageleft = pygame.transform.flip(self.image, True, False)
+        self.imageright = self.image
         self.hops = 0
     def tick(self):
         old_dx = self.dx
@@ -86,13 +93,26 @@ class Player(Thing):
 
 
 class Platform(Thing):
-    def __init__(self, x, y):
-        Thing.__init__(self, "platform.png", x, y)
-        self.solid = True
-    def tick(self):
-        pass
+    def __init__(self, x, y, ** kwargs):
+        if "img" in kwargs:
+            Thing.__init__(self, kwargs["img"], x, y) 
+        else:
+            Thing.__init__(self, "platform.png", x, y)
     def draw(self, win):
         pass
+    def bang(self, player):
+        player.rect.bottom = self.rect.y-1
+        player.dy = 0
+        player.airbourne = False
+        player.hops = 0
+
+class LoosePlatform(Platform):
+    def __init__(self, x, y, ** kwargs):
+        Platform.__init__(self, x, y, ** kwargs)
+    def draw(self, win):
+        pass
+    def bang(self, player):
+        self.ddy = 2
 
 class Stage():
     def __init__(self):
@@ -114,10 +134,23 @@ class Stage():
             y += 100
 
 
-        self.sprites.add(Thing("sky.png",0,0), layer = 0)
-        self.sprites.add(Platform(400, 700))
+        top = load_image("sky.png")
+        sky = top.subsurface(0,0,top.get_rect().width,300)
+        self.sprites.add(Thing(sky,0,0), layer = 0)
+        
+        first_line = 50
+        second_line = 150
+        width = top.get_rect().width
 
-        self.sprites.add(Platform(200, 800))
+        ground1st = top.subsurface(0,300,first_line,50)
+        self.sprites.add(Platform(0,300, img = ground1st), layer = 0)
+
+        ground2nd = top.subsurface(first_line,300,second_line - first_line,50)
+        self.sprites.add(LoosePlatform(first_line, 300, img = ground2nd), layer = 0)
+
+        ground3rd = top.subsurface(second_line,300,width - second_line,50)
+        self.sprites.add(Platform(second_line, 300, img = ground3rd), layer = 0)
+
         self.sprites.add(Platform(200, 0))
         self.sprites.add(Platform(200, 900))
         self.sprites.add(Platform(200, 1000))
@@ -145,15 +178,13 @@ class Stage():
         self.sprites.tick();
         
         feet = pygame.sprite.Sprite()
-        feet.rect = pygame.Rect(self.player.rect.x, self.player.rect.bottom - 2, self.player.rect.width, 2)
+        feet.rect = pygame.Rect(self.player.rect.x + self.player.rect.width /2, self.player.rect.bottom - 2, 2, 2)
 
         if self.player.dy > 0:
             for platform in self.sprites:
-                if pygame.sprite.collide_rect(feet, platform) and hasattr(platform, "solid") and platform.solid:
-                    self.player.rect.bottom = platform.rect.y-1
-                    self.player.dy = 0
-                    self.player.airbourne = False
-                    self.player.hops = 0
+                if pygame.sprite.collide_rect(feet, platform) and hasattr(platform, "bang"):
+                    platform.bang(self.player)
+
 
         y = self.player.rect.y
         if y < 100:
