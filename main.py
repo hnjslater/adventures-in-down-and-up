@@ -208,9 +208,9 @@ class Stage():
         self.sprites.add(Platform(500+64, LEVEL_HEIGHT - 1300))
         self.sprites.add(Platform(500+128, LEVEL_HEIGHT - 1300))
         self.sprites.add(MovingPlatform(500, LEVEL_HEIGHT - 1400, 500, LEVEL_HEIGHT - 1600, 5))
-        self.sprites.add(MovingPlatform(10, LEVEL_HEIGHT - 1600, 500, LEVEL_HEIGHT - 1600, 5))
+        self.sprites.add(MovingPlatform(10, LEVEL_HEIGHT - 1600, 600, LEVEL_HEIGHT - 1600, 5))
         self.sprites.add(WrappingPlatform(10, LEVEL_HEIGHT - 1700, 500, LEVEL_HEIGHT - 1700, 2))
-        self.sprites.add(Platform(700, LEVEL_HEIGHT - 1800))
+        self.sprites.add(Platform(700, LEVEL_HEIGHT - 1850))
         self.sprites.add(MovingPlatform(200, LEVEL_HEIGHT - 1900, 600, LEVEL_HEIGHT - 2100, 2))
 
 
@@ -242,19 +242,19 @@ class Stage():
 
     def keypress(self, key):
         if not self.player.falling:
-            if key == K_RIGHT:
+            if key == K_RIGHT or key == K_d:
                 self.player.ddx = WALKING_SPEED
-            elif key == K_LEFT:
+            elif key == K_LEFT or key == K_a:
                 self.player.ddx = -WALKING_SPEED
-            elif key == K_SPACE:
+            elif key == K_SPACE or key == K_w or key == K_UP:
                 self.player.jump()
         
     def keyup(self, key):
         if not self.player.falling:
-            if key == K_RIGHT and self.player.ddx == WALKING_SPEED:
+            if (key == K_RIGHT or key == K_d) and self.player.ddx == WALKING_SPEED:
                 self.player.ddx = 0
                 self.player.dx = 0
-            elif key == K_LEFT and self.player.ddx == -WALKING_SPEED:
+            elif (key == K_LEFT  or key == K_a) and self.player.ddx == -WALKING_SPEED:
                 self.player.ddx = 0
                 self.player.dx = 0
             
